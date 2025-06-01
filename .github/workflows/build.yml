@@ -42,10 +42,12 @@ jobs:
           echo "SBT installation complete."
 
       - name: Debug - List Files and Directories
+        # Check its output in the GitHub Actions logs.
         run: |
           echo "Listing contents of repository root and 'resources/' folder:"
-          ls -R . # Lists everything recursively from the root
+          ls -R . # Lists everything recursively from the current directory (repo root)
           echo "--- Contents of resources/ ---"
+          # 'ls -l' provides more details like permissions.
           ls -l resources/ # Lists contents of the specific resources folder
           echo "--- End Debug Listing ---"
 
@@ -53,14 +55,13 @@ jobs:
         # This is the core build step for your Scala project.
         # 'sbt clean assembly' will:
         #   - Clean any previous build artifacts.
-        #   - Download the exact SBT version specified in your `project/build.properties` (e.g., 1.10.11).
+        #   - Download the exact SBT version specified in your `project/build.properties`.
         #   - Resolve and download all project dependencies defined in your `build.sbt`.
         #   - Compile your Scala source code (from `src/main/scala/`).
-        #   - Use the `sbt-assembly` plugin (configured in `project/plugins.sbt` and `build.sbt`)
-        #     to package your compiled code and its non-provided dependencies into a single "fat" JAR.
-        # The JAR will be created in the `resource/` directory of your repository on the runner.
-        # The output logs of this step will clearly show the path where the JAR is generated.
+        #   - Use the `sbt-assembly` plugin to package your code into a fat JAR.
+        # The JAR will be created in the `resources/` directory as per your `build.sbt`.
+        # The output logs of this step will show the path where the JAR is generated.
         run: |
           echo "Starting SBT build process..."
           sbt clean assembly
-          echo "SBT build process finished. Check the logs above for the exact JAR output path (e.g., in the 'resource/' directory)."
+          echo "SBT build process finished. Check the logs above for the exact JAR output path (e.g., in the 'resources/' directory)."
