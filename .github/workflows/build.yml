@@ -3,56 +3,56 @@ name: Build Scala JAR
 on:
   push:
     branches:
-      - main
-  workflow_dispatch:
+      - main # Triggers the workflow on pushes to the 'main' branch
+  workflow_dispatch: # Allows manual triggering from the GitHub Actions UI
 
 jobs:
-  build-and-deploy-jar:
-    runs-on: ubuntu-latest
+  build-jar: # Defines a job named 'build-jar'
+    runs-on: ubuntu-latest # Executes the job on the latest Ubuntu runner
 
     steps:
       - name: Checkout Repository
+        # Clones your Git repository onto the runner.
         uses: actions/checkout@v4
 
       - name: Set up Java JDK 17
+        # Installs Java 17, which is required by SBT.
         uses: actions/setup-java@v4
         with:
           java-version: '17'
-          distribution: 'temurin'
-          cache: sbt
+          distribution: 'temurin' # Recommended OpenJDK distribution
+          cache: sbt # Enables caching of SBT dependencies to speed up subsequent builds.
 
-      # === NEW STEP: Install SBT ===
       - name: Install SBT
+        # Downloads and sets up the SBT launcher script on the runner.
+        # This makes the 'sbt' command available in subsequent steps.
         run: |
-          # Download the SBT launcher script
-          SBT_VERSION="1.10.11"
+          SBT_VERSION="1.10.11" # Specify the SBT launcher version.
+          echo "Downloading SBT launcher v${SBT_VERSION}..."
           curl -sL "https://github.com/sbt/sbt/releases/download/v${SBT_VERSION}/sbt-${SBT_VERSION}.tgz" -o sbt.tgz
-          tar xf sbt.tgz -C /opt/
-          
-          # Add the SBT bin directory to the PATH for current and subsequent steps
+          tar xf sbt.tgz -C /opt/ # Extracts the launcher to /opt/sbt
+
+          # Add SBT's binary directory to the system's PATH.
+          # This allows the 'sbt' command to be found.
           echo "/opt/sbt/bin" >> $GITHUB_PATH
           export PATH="/opt/sbt/bin:$PATH"
 
-          # Verify SBT installation
-          sbt sbtVersion
+          echo "Verifying SBT installation..."
+          sbt sbtVersion # Runs 'sbt sbtVersion' to confirm it's installed and callable.
           echo "SBT installation complete."
-      # === END NEW STEP ===
 
       - name: Build Scala JAR with SBT Assembly
-        run: sbt clean assembly
-
-      - name: Build Scala JAR with SBT Assembly
-        # This is the core build step.
+        # This is the core build step for your Scala project.
         # 'sbt clean assembly' will:
-        #   - Clean previous build artifacts.
-        #   - Download the exact SBT version specified in project/build.properties (e.g., 1.10.11).
-        #   - Resolve and download project dependencies (from libraryDependencies in build.sbt).
-        #   - Compile your Scala source code (from src/main/scala/).
-        #   - Use the sbt-assembly plugin to create the fat JAR.
-        # The output logs of this step will show the path where the JAR is created,
-        # typically at `resource/structured-streaming-mq-assembly-0.1.0-SNAPSHOT.jar`
-        # as per your `build.sbt` configuration.
+        #   - Clean any previous build artifacts.
+        #   - Download the exact SBT version specified in your `project/build.properties` (e.g., 1.10.11).
+        #   - Resolve and download all project dependencies defined in your `build.sbt`.
+        #   - Compile your Scala source code (from `src/main/scala/`).
+        #   - Use the `sbt-assembly` plugin (configured in `project/plugins.sbt` and `build.sbt`)
+        #     to package your compiled code and its non-provided dependencies into a single "fat" JAR.
+        # The JAR will be created in the `resource/` directory of your repository on the runner.
+        # The output logs of this step will clearly show the path where the JAR is generated.
         run: |
           echo "Starting SBT build process..."
           sbt clean assembly
-          echo "SBT build process finished. Check logs for JAR creation path."
+          echo "SBT build process finished. Check the logs above for the exact JAR output path (e.g., in the 'resource/' directory)."
