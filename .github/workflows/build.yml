@@ -41,6 +41,14 @@ jobs:
           sbt sbtVersion # Runs 'sbt sbtVersion' to confirm it's installed and callable.
           echo "SBT installation complete."
 
+      - name: Debug - List Files and Directories
+        run: |
+          echo "Listing contents of repository root and 'resources/' folder:"
+          ls -R . # Lists everything recursively from the root
+          echo "--- Contents of resources/ ---"
+          ls -l resources/ # Lists contents of the specific resources folder
+          echo "--- End Debug Listing ---"
+
       - name: Build Scala JAR with SBT Assembly
         # This is the core build step for your Scala project.
         # 'sbt clean assembly' will:
