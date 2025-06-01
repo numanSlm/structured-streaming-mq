@@ -29,7 +29,7 @@ lazy val root = (project in file("."))
     // This is the entry point for your application when the JAR is executed.
     // !! IMPORTANT: Ensure "org.structstream.mq.HelloWorld" exactly matches
     //    the fully qualified name of your main Scala object !!
-    assembly / mainClass := Some("org.structstream.mq.HelloWorld"),
+    assembly / mainClass := Some("org.structstream.mq.mq"),
 
     // Define merge strategies for handling conflicts when creating the fat JAR.
     // This is crucial to prevent issues when multiple libraries contain files with the same path (e.g., META-INF files).
@@ -41,5 +41,5 @@ lazy val root = (project in file("."))
     // Define the output path and naming convention for the generated assembly JAR.
     // This line places the JAR directly into a 'resource' folder at your project's root.
     // The JAR will be named something like 'structured-streaming-mq-assembly-0.1.0-SNAPSHOT.jar'.
-    assembly / assemblyOutputPath := baseDirectory.value / "resources" / s"${name.value}-assembly-${version.value}.jar"
-  )
+    // In build.sbt
+    assembly / assemblyOutputPath := baseDirectory.value / "resources" / s"${name.value}-assembly-${version.value}.jar"  )
