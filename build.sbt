@@ -42,4 +42,5 @@ lazy val root = (project in file("."))
     // This line places the JAR directly into a 'resource' folder at your project's root.
     // The JAR will be named something like 'structured-streaming-mq-assembly-0.1.0-SNAPSHOT.jar'.
     // In build.sbt
-    assembly / assemblyOutputPath := baseDirectory.value / "resources" / s"${name.value}-assembly-${version.value}.jar"  )
+    assembly / assemblyOutputPath := baseDirectory.value / "resources" / s"${name.value}-assembly-${version.value}.jar"
+)
