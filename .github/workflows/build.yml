@@ -1,0 +1,75 @@
+name: Build Scala JAR and Deploy to S3
+
+# This workflow will trigger on:
+# 1. Pushes to the 'main' branch.
+# 2. Manual trigger from the GitHub Actions UI ('Run workflow' button).
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+# Defines a single job named 'build-and-deploy-jar'
+jobs:
+  build-and-deploy-jar:
+    # Specifies the runner environment.
+    # 'ubuntu-latest' uses a GitHub-hosted runner.
+    # For self-hosted runners (e.g., in your VPC), uncomment and adjust the line below:
+    runs-on: ubuntu-latest
+    # runs-on: [self-hosted, linux, x64, my-custom-runner-label] # Example for self-hosted
+
+    # Steps define the sequence of tasks to be executed in the job.
+    steps:
+      - name: Checkout Repository
+        # Uses the official 'actions/checkout' action to clone your repository
+        # onto the runner's file system. This makes your source code and build files available.
+        uses: actions/checkout@v4
+
+      - name: Set up Java JDK 17
+        # Uses the official 'actions/setup-java' action to install the specified Java Development Kit.
+        # This is required for SBT to run and compile your Scala code.
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17' # Specifies Java 17 LTS
+          distribution: 'temurin' # Recommends the Temurin OpenJDK distribution
+          cache: sbt # Enables caching for SBT dependencies, which can significantly speed up subsequent builds.
+          # This relies on your project/build.properties and build.sbt being correctly configured.
+
+      - name: Build Scala JAR with SBT Assembly
+        # Executes the Scala Build Tool (SBT) commands.
+        # 'clean' removes any previous build artifacts.
+        # 'assembly' invokes the sbt-assembly plugin to:
+        #   1. Compile your Scala source code (from src/main/scala/).
+        #   2. Resolve and download necessary project dependencies (e.g., scala-library).
+        #   3. Package your compiled code and its non-provided dependencies into a single "fat" JAR.
+        # The JAR will be placed in the 'resource/' directory as configured in your build.sbt.
+        run: sbt clean assembly
+
+      - name: Locate Generated JAR file
+        # This step identifies the path and filename of the JAR created by the previous SBT step.
+        id: locate_jar # Assigns an ID to this step, allowing subsequent steps to access its outputs.
+        run: |
+          # Define variables that match your project's 'name' and 'version' from build.sbt.
+          # These are used to construct the expected filename of the generated JAR.
+          PROJECT_NAME="structured-streaming-mq"
+          PROJECT_VERSION="0.1.0-SNAPSHOT"
+
+          # Construct the full expected JAR filename as per your build.sbt's 'assemblyOutputPath' setting.
+          JAR_FILENAME="${PROJECT_NAME}-assembly-${PROJECT_VERSION}.jar"
+
+          # Use the 'find' command to locate the JAR.
+          # It searches within the './resource/' directory (relative to the repo root).
+          # '-print -quit' ensures it prints the first match and then stops.
+          JAR_PATH=$(find ./resource/ -name "${JAR_FILENAME}" -print -quit)
+
+          # Conditional check: If no JAR file was found, print an error message and fail the job.
+          if [ -z "$JAR_PATH" ]; then
+            echo "Error: No JAR file found in ./resource/ directory matching '${JAR_FILENAME}'."
+            echo "Please verify your build.sbt assembly configuration and ensure the JAR is correctly created in the 'resource/' folder."
+            exit 1
+          fi
+
+          echo "Found JAR at: $JAR_PATH"
+          # Set outputs for this step. These outputs can be referenced by subsequent steps using `steps.locate_jar.outputs.JAR_PATH`.
+          echo "JAR_PATH=$JAR_PATH" >> $GITHUB_OUTPUT
+          echo "JAR_FILENAME=$(basename $JAR_PATH)" >> $GITHUB_OUTPUT
