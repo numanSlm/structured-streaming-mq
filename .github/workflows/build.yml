@@ -41,18 +41,18 @@ jobs:
       - name: Build Scala JAR with SBT Assembly
         run: sbt clean assembly
 
-      - name: Locate Generated JAR file
-        id: locate_jar
+      - name: Build Scala JAR with SBT Assembly
+        # This is the core build step.
+        # 'sbt clean assembly' will:
+        #   - Clean previous build artifacts.
+        #   - Download the exact SBT version specified in project/build.properties (e.g., 1.10.11).
+        #   - Resolve and download project dependencies (from libraryDependencies in build.sbt).
+        #   - Compile your Scala source code (from src/main/scala/).
+        #   - Use the sbt-assembly plugin to create the fat JAR.
+        # The output logs of this step will show the path where the JAR is created,
+        # typically at `resource/structured-streaming-mq-assembly-0.1.0-SNAPSHOT.jar`
+        # as per your `build.sbt` configuration.
         run: |
-          PROJECT_NAME="structured-streaming-mq"
-          PROJECT_VERSION="0.1.0-SNAPSHOT"
-          JAR_FILENAME="${PROJECT_NAME}-assembly-${PROJECT_VERSION}.jar"
-          JAR_PATH=$(find ./resource/ -name "${JAR_FILENAME}" -print -quit)
-          if [ -z "$JAR_PATH" ]; then
-            echo "Error: No JAR file found in ./resource/ directory matching '${JAR_FILENAME}'."
-            echo "Please verify your build.sbt assembly configuration and that the JAR is created in the 'resource/' folder."
-            exit 1
-          fi
-          echo "Found JAR at: $JAR_PATH"
-          echo "JAR_PATH=$JAR_PATH" >> $GITHUB_OUTPUT
-          echo "JAR_FILENAME=$(basename $JAR_PATH)" >> $GITHUB_OUTPUT
+          echo "Starting SBT build process..."
+          sbt clean assembly
+          echo "SBT build process finished. Check logs for JAR creation path."
